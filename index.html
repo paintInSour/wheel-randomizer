@@ -138,6 +138,7 @@
     }
     .wheel-corner-btn:hover { background: rgba(237, 233, 254, 0.95); box-shadow: 0 4px 14px rgba(124,58,237,0.22); transform: scale(1.04); }
     .wheel-corner-btn.open  { background: rgba(237, 233, 254, 0.97); }
+    .wheel-corner-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     @media (max-width: 768px) {
       input { font-size: 16px !important; }
@@ -559,6 +560,7 @@
                 <button
                   className={`wheel-corner-btn ${showWheelsPanel ? 'open' : ''}`}
                   onClick={() => setShowWheelsPanel(p => !p)}
+                  disabled={spinning}
                   title="My saved wheels"
                 >
                   <LayersIcon />
