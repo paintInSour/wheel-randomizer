@@ -47,6 +47,17 @@
     .icon-btn { transition: color 0.15s ease, transform 0.15s ease; }
     .icon-btn:hover { transform: scale(1.15); }
 
+    .remove-winner-btn {
+      background: rgba(239, 68, 68, 0.22);
+      color: #fecaca;
+      border: 1.5px solid rgba(239, 68, 68, 0.35);
+    }
+    .remove-winner-btn:hover {
+      background: rgba(239, 68, 68, 0.38);
+      border-color: rgba(239, 68, 68, 0.55);
+      color: #fff;
+    }
+
     .card { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); }
     .scroll-area { scrollbar-width: thin; scrollbar-color: #d1c4f0 transparent; }
     .scroll-area::-webkit-scrollbar { width: 4px; }
@@ -368,15 +379,10 @@
             {/* ── Wheel card ── */}
             <div className="card rounded-3xl shadow-2xl p-5 pb-6" style={{ boxShadow: '0 20px 60px rgba(124,58,237,0.13)' }}>
 
-              {/* wheel */}
-              <div className="max-w-xs mx-auto">
-                <Wheel options={options} rotation={rotation} />
-              </div>
-
-              {/* result */}
+              {/* result — shown above the wheel */}
               {result && !spinning && (
                 <div
-                  className="result-pop mt-5 py-5 px-6 rounded-2xl"
+                  className="result-pop mb-5 py-5 px-6 rounded-2xl"
                   style={{ background: 'linear-gradient(135deg,#7c3aed,#c084fc)' }}
                 >
                   <div className="text-center">
@@ -388,15 +394,18 @@
                       setOptions(p => p.filter(o => o !== result));
                       setResult(null);
                     }}
-                    className="mt-4 w-full py-2 rounded-xl text-xs font-semibold transition-all duration-150"
-                    style={{ background: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.9)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.28)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
+                    className="remove-winner-btn mt-4 w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-150"
                   >
+                    <TrashIcon />
                     Remove from wheel
                   </button>
                 </div>
               )}
+
+              {/* wheel */}
+              <div className="max-w-xs mx-auto">
+                <Wheel options={options} rotation={rotation} />
+              </div>
 
               {/* spin button */}
               <button
