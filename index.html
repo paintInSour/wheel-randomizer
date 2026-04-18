@@ -94,6 +94,32 @@
     .load-btn:hover { background: #ede9fe; }
     .load-btn.current { background: #7c3aed; color: #fff; border-color: transparent; cursor: default; }
 
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 20, 60, 0.35);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeIn 0.15s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .modal-card {
+      background: rgba(255,255,255,0.98);
+      border-radius: 28px;
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 24px 64px rgba(124, 58, 237, 0.22), 0 4px 16px rgba(0,0,0,0.08);
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+
     .wheel-corner-btn {
       display: flex;
       align-items: center;
@@ -138,7 +164,8 @@
     const EditIcon    = () => <Icon d={<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>} />;
     const TrashIcon   = () => <Icon d={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></>} />;
     const CheckIcon   = () => <Icon d={<polyline points="20 6 9 17 4 12"/>} />;
-    const SaveIcon    = () => <Icon d={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />;
+    const PlusIcon     = () => <Icon d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />;
+    const BookmarkIcon = () => <Icon d={<><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></>} />;
     const LayersIcon  = () => <Icon d={<><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>} />;
     const FolderIcon  = () => <Icon d={<><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></>} />;
 
@@ -342,30 +369,30 @@
       const [confirmClear, setConfirmClear] = useState(false);
 
       /* saved-wheels state */
-      const [savedWheels,   setSavedWheels]   = useState(loadSavedWheels);
-      const [activeWheelId, setActiveWheelId] = useState(null);
-      const [showSavePanel, setShowSavePanel] = useState(false);
-      const [saveName,      setSaveName]      = useState('');
+      const [savedWheels,     setSavedWheels]     = useState(loadSavedWheels);
+      const [activeWheelId,   setActiveWheelId]   = useState(null);
       const [showWheelsPanel, setShowWheelsPanel] = useState(false);
+      const [newWheelName,    setNewWheelName]    = useState('');
+      const [showSaveModal,   setShowSaveModal]   = useState(false);
+      const [saveModalName,   setSaveModalName]   = useState('');
 
-      const rotRef          = useRef(initRotation(loadOptions().length));
-      const animRef         = useRef(null);
-      const editInputRef    = useRef(null);
-      const addInputRef     = useRef(null);
-      const saveNameRef     = useRef(null);
-      const savePanelRef    = useRef(null);
-      const wheelsPanelRef  = useRef(null);
+      const rotRef           = useRef(initRotation(loadOptions().length));
+      const animRef          = useRef(null);
+      const editInputRef     = useRef(null);
+      const addInputRef      = useRef(null);
+      const newWheelNameRef  = useRef(null);
+      const wheelsPanelRef   = useRef(null);
+      const saveModalNameRef = useRef(null);
 
-      /* close panels on outside click */
+      /* close wheels panel on outside click */
       useEffect(() => {
-        if (!showSavePanel && !showWheelsPanel) return;
+        if (!showWheelsPanel) return;
         const onMouseDown = e => {
-          if (savePanelRef.current   && !savePanelRef.current.contains(e.target))   setShowSavePanel(false);
           if (wheelsPanelRef.current && !wheelsPanelRef.current.contains(e.target)) setShowWheelsPanel(false);
         };
         document.addEventListener('mousedown', onMouseDown);
         return () => document.removeEventListener('mousedown', onMouseDown);
-      }, [showSavePanel, showWheelsPanel]);
+      }, [showWheelsPanel]);
 
       /* spin logic */
       const spin = useCallback(() => {
@@ -410,6 +437,14 @@
       /* persist saved wheels library */
       useEffect(() => { persistSavedWheels(savedWheels); }, [savedWheels]);
 
+      /* auto-save options into active wheel whenever they change */
+      useEffect(() => {
+        if (!activeWheelId) return;
+        setSavedWheels(prev => prev.map(w =>
+          w.id === activeWheelId ? { ...w, options: [...options] } : w
+        ));
+      }, [options, activeWheelId]);
+
       /* cleanup on unmount */
       useEffect(() => () => cancelAnimationFrame(animRef.current), []);
 
@@ -453,32 +488,30 @@
       };
 
       /* ── saved-wheels handlers ─────────────────────────────────── */
-      const openSavePanel = () => {
-        const activeName = activeWheelId
-          ? (savedWheels.find(w => w.id === activeWheelId)?.name ?? '')
-          : '';
-        setSaveName(activeName);
-        setShowSavePanel(true);
-        setShowWheelsPanel(false);
-        setTimeout(() => saveNameRef.current?.focus(), 30);
+      const createWheel = () => {
+        const name = newWheelName.trim();
+        if (!name) return;
+        const newWheel = { id: String(Date.now()), name, options: [...options] };
+        setSavedWheels(prev => [...prev, newWheel]);
+        setActiveWheelId(newWheel.id);
+        setNewWheelName('');
+        setTimeout(() => newWheelNameRef.current?.focus(), 10);
       };
 
-      const saveCurrentWheel = () => {
-        const name = saveName.trim();
+      const saveAsWheel = () => {
+        const name = saveModalName.trim();
         if (!name) return;
-        const existing = savedWheels.find(w => w.name === name);
+        const newWheel = { id: String(Date.now()), name, options: [...options] };
+        setSavedWheels(prev => [...prev, newWheel]);
+        setActiveWheelId(newWheel.id);
+        setShowSaveModal(false);
+        setSaveModalName('');
+      };
 
-        if (existing) {
-          setSavedWheels(prev => prev.map(w =>
-            w.id === existing.id ? { ...w, name, options: [...options] } : w
-          ));
-          setActiveWheelId(existing.id);
-        } else {
-          const newWheel = { id: String(Date.now()), name, options: [...options] };
-          setSavedWheels(prev => [...prev, newWheel]);
-          setActiveWheelId(newWheel.id);
-        }
-        setShowSavePanel(false);
+      const openSaveModal = () => {
+        setSaveModalName('');
+        setShowSaveModal(true);
+        setTimeout(() => saveModalNameRef.current?.focus(), 30);
       };
 
       const loadSavedWheel = wheel => {
@@ -499,6 +532,7 @@
         : null;
 
       return (
+        <>
         <div className="min-h-screen py-6 px-4">
           <div className="max-w-md mx-auto flex flex-col gap-5">
 
@@ -517,23 +551,26 @@
             <div className="card rounded-3xl shadow-2xl p-5 pb-6 relative" style={{ boxShadow: '0 20px 60px rgba(124,58,237,0.13)' }}>
 
               {/* My Wheels — top-left corner of the card */}
-              {savedWheels.length > 0 && (
-                <div className="absolute top-4 left-4 z-20" ref={wheelsPanelRef}>
-                  <button
-                    className={`wheel-corner-btn ${showWheelsPanel ? 'open' : ''}`}
-                    onClick={() => { setShowWheelsPanel(p => !p); setShowSavePanel(false); }}
-                    title="My saved wheels"
-                  >
-                    <LayersIcon />
-                    <span>{savedWheels.length}</span>
-                  </button>
+              <div className="absolute top-4 left-4 z-20" ref={wheelsPanelRef}>
+                <button
+                  className={`wheel-corner-btn ${showWheelsPanel ? 'open' : ''}`}
+                  onClick={() => setShowWheelsPanel(p => !p)}
+                  title="My saved wheels"
+                >
+                  <LayersIcon />
+                  {savedWheels.length > 0 && <span>{savedWheels.length}</span>}
+                </button>
 
-                  {showWheelsPanel && (
-                    <div className="float-panel mt-1" style={{ width: '272px', left: 0, right: 'auto' }}>
-                      <div className="px-4 pt-4 pb-2">
-                        <p className="text-xs font-bold uppercase tracking-widest text-violet-400">My Wheels</p>
-                      </div>
-                      <div className="scroll-area flex flex-col gap-1 max-h-60 overflow-y-auto px-2 pb-3">
+                {showWheelsPanel && (
+                  <div className="float-panel mt-1" style={{ width: '272px', left: 0, right: 'auto' }}>
+                    <div className="px-4 pt-4 pb-2">
+                      <p className="text-xs font-bold uppercase tracking-widest text-violet-400">My Wheels</p>
+                    </div>
+
+                    {savedWheels.length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center px-4 pb-3">No saved wheels yet. Create one below!</p>
+                    ) : (
+                      <div className="scroll-area flex flex-col gap-1 max-h-52 overflow-y-auto px-2">
                         {savedWheels.map(wheel => (
                           <div
                             key={wheel.id}
@@ -549,7 +586,7 @@
                               onClick={() => wheel.id !== activeWheelId && loadSavedWheel(wheel)}
                               className={`load-btn ${wheel.id === activeWheelId ? 'current' : ''}`}
                             >
-                              {wheel.id === activeWheelId ? 'Loaded' : 'Load'}
+                              {wheel.id === activeWheelId ? 'Active' : 'Load'}
                             </button>
                             <button
                               onClick={() => deleteSavedWheel(wheel.id)}
@@ -561,10 +598,30 @@
                           </div>
                         ))}
                       </div>
+                    )}
+
+                    {/* new wheel input — mirrors the options add row */}
+                    <div className="flex gap-2 px-3 py-3 border-t border-gray-100 mt-1">
+                      <input
+                        ref={newWheelNameRef}
+                        className="flex-1 bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-300 transition-all"
+                        placeholder="New wheel name…"
+                        value={newWheelName}
+                        onChange={e => setNewWheelName(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && createWheel()}
+                      />
+                      <button
+                        onClick={createWheel}
+                        disabled={!newWheelName.trim()}
+                        className="add-btn w-9 h-9 flex items-center justify-center rounded-xl text-white flex-shrink-0 disabled:opacity-40"
+                        title="Create wheel"
+                      >
+                        <PlusIcon />
+                      </button>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
 
               {/* result — shown above the wheel */}
               {result && !spinning && (
@@ -628,47 +685,16 @@
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  {/* Save button */}
-                  <div className="relative" ref={savePanelRef}>
+                  {/* Save as wheel — only when no active wheel and options exist */}
+                  {!activeWheelId && options.length > 0 && (
                     <button
-                      className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all duration-200 disabled:opacity-30 ${showSavePanel ? 'bg-violet-100 text-violet-600' : 'bg-gray-100 text-gray-500 hover:bg-violet-50 hover:text-violet-500'}`}
-                      onClick={() => showSavePanel ? setShowSavePanel(false) : openSavePanel()}
-                      disabled={options.length === 0 || spinning}
-                      title="Save current wheel"
+                      onClick={openSaveModal}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all duration-200 bg-violet-50 text-violet-600 hover:bg-violet-100"
                     >
-                      <SaveIcon />
-                      <span>Save</span>
+                      <BookmarkIcon />
+                      Save as wheel
                     </button>
-
-                    {showSavePanel && (
-                      <div className="float-panel p-4" style={{ width: '240px' }}>
-                        <p className="text-xs font-bold uppercase tracking-widest text-violet-400 mb-3">Save Wheel</p>
-                        <input
-                          ref={saveNameRef}
-                          className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-300 transition-all"
-                          placeholder="e.g. Dinner options"
-                          value={saveName}
-                          onChange={e => setSaveName(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') saveCurrentWheel();
-                            if (e.key === 'Escape') setShowSavePanel(false);
-                          }}
-                        />
-                        <button
-                          onClick={saveCurrentWheel}
-                          disabled={!saveName.trim()}
-                          className="spin-btn mt-3 w-full py-2.5 rounded-xl font-bold text-white disabled:opacity-40"
-                          style={{ fontSize: '13px' }}
-                        >
-                          <span className="flex items-center justify-center gap-2">
-                          <SaveIcon />
-                          {savedWheels.some(w => w.name === saveName.trim()) ? 'Update wheel' : 'Save wheel'}
-                        </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
+                  )}
                   {/* Clear all */}
                   {options.length > 0 && (
                     <button
@@ -786,6 +812,45 @@
 
           </div>
         </div>
+
+        {/* ── Save-as-wheel modal ── */}
+        {showSaveModal && (
+          <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setShowSaveModal(false); }}>
+            <div className="modal-card">
+              <h2 className="text-xl font-extrabold text-gray-800 mb-1">Save as wheel</h2>
+              <p className="text-sm text-gray-400 mb-5">Give your options a name so they're saved and tracked automatically.</p>
+
+              <input
+                ref={saveModalNameRef}
+                className="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-300 transition-all"
+                placeholder="e.g. Dinner options"
+                value={saveModalName}
+                onChange={e => setSaveModalName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') saveAsWheel();
+                  if (e.key === 'Escape') setShowSaveModal(false);
+                }}
+              />
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="flex-1 py-3 rounded-2xl text-sm font-semibold text-gray-400 bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveAsWheel}
+                  disabled={!saveModalName.trim()}
+                  className="spin-btn flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-40"
+                >
+                  Save wheel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        </>
       );
     }
 
