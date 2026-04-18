@@ -623,32 +623,32 @@
                 )}
               </div>
 
-              {/* result — shown above the wheel */}
-              {result && !spinning && (
-                <div
-                  className="result-pop mb-5 py-5 px-6 rounded-2xl"
-                  style={{ background: 'linear-gradient(135deg,#7c3aed,#c084fc)' }}
-                >
-                  <div className="text-center">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-200 mb-1">🎉 Winner!</p>
-                    <p className="text-white text-2xl font-extrabold leading-snug">{result}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setOptions(p => p.filter(o => o !== result));
-                      setResult(null);
-                    }}
-                    className="remove-winner-btn mt-4 w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-150"
-                  >
-                    <TrashIcon />
-                    Remove from wheel
-                  </button>
-                </div>
-              )}
-
-              {/* wheel */}
-              <div className="max-w-xs mx-auto">
+              {/* wheel — result overlays it so the card never resizes */}
+              <div className="max-w-xs mx-auto relative">
                 <Wheel options={options} rotation={rotation} />
+
+                {result && !spinning && (
+                  <div
+                    className="result-pop absolute left-4 right-4 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center rounded-3xl py-6"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(109,40,217,0.82), rgba(167,139,250,0.82))',
+                      backdropFilter: 'blur(10px)',
+                    }}
+                  >
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-200 mb-2">🎉 Winner!</p>
+                    <p className="text-white text-2xl font-extrabold leading-snug text-center px-8 break-words">{result}</p>
+                    <button
+                      onClick={() => {
+                        setOptions(p => p.filter(o => o !== result));
+                        setResult(null);
+                      }}
+                      className="remove-winner-btn mt-5 px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all duration-150"
+                    >
+                      <TrashIcon />
+                      Remove from wheel
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* spin button */}
