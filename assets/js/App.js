@@ -10,6 +10,7 @@
   const HISTORY_PAGE_SIZE = 5;
   const WINNER_TEXT_SIZE_CLASSES = ['text-2xl', 'text-xl', 'text-lg', 'text-base'];
   const WINNER_MIN_PREVIEW_LENGTH = 18;
+  const WINNER_POPUP_BUTTON_SAFE_GAP = 10;
 
   function getInitialState() {
     const savedWheels = loadSavedWheels();
@@ -64,6 +65,7 @@
     const winnerBadgeRef = useRef(null);
     const winnerTextRef = useRef(null);
     const removeWinnerBtnRef = useRef(null);
+    const spinButtonRef = useRef(null);
 
     useEffect(() => {
       if (!showSaveModal && !showHistoryModal && !showWheelsModal) {
@@ -371,11 +373,14 @@
       const badgeElement = winnerBadgeRef.current;
       const textElement = winnerTextRef.current;
       const removeButtonElement = removeWinnerBtnRef.current;
+      const spinButtonElement = spinButtonRef.current;
 
-      if (!popupElement || !badgeElement || !textElement || !removeButtonElement) {
+      if (!popupElement || !badgeElement || !textElement || !removeButtonElement || !spinButtonElement) {
         return;
       }
 
+      const popupRect = popupElement.getBoundingClientRect();
+      const spinButtonRect = spinButtonElement.getBoundingClientRect();
       const popupStyles = window.getComputedStyle(popupElement);
       const popupPaddingTop = parseFloat(popupStyles.paddingTop) || 0;
       const popupPaddingBottom = parseFloat(popupStyles.paddingBottom) || 0;
@@ -393,13 +398,13 @@
         textMarginBottom +
         buttonMarginTop +
         removeButtonElement.offsetHeight;
-      const availableTextHeight = popupElement.clientHeight - reservedHeight;
+      const popupHeightBeforeSpinButton = Math.max(
+        0,
+        spinButtonRect.top - popupRect.top - WINNER_POPUP_BUTTON_SAFE_GAP,
+      );
+      const availableTextHeight = popupHeightBeforeSpinButton - reservedHeight;
 
-      if (availableTextHeight <= 0) {
-        return;
-      }
-
-      const textOverflows = textElement.scrollHeight > availableTextHeight + 1;
+      const textOverflows = availableTextHeight <= 0 || textElement.scrollHeight > availableTextHeight + 1;
       if (!textOverflows) {
         return;
       }
@@ -418,6 +423,8 @@
     const canSpin = !spinning && options.length >= 2;
     const winnerTextSizeClass =
       WINNER_TEXT_SIZE_CLASSES[winnerTextSizeIndex] ?? WINNER_TEXT_SIZE_CLASSES[WINNER_TEXT_SIZE_CLASSES.length - 1];
+    const winnerTextLineHeightClass =
+      winnerTextSizeIndex >= WINNER_TEXT_SIZE_CLASSES.length - 2 ? 'leading-tight' : 'leading-snug';
     const winnerFullText = result ? normalizeWinnerText(result) : '';
     const winnerLabelText = winnerPreviewText || winnerFullText;
     const activeWheel = activeWheelId ? (savedWheels.find(wheel => wheel.id === activeWheelId) ?? null) : null;
@@ -495,7 +502,7 @@
                   </p>
                   <p
                     ref={winnerTextRef}
-                    className={`result-value text-white ${winnerTextSizeClass} font-extrabold leading-snug text-center px-7`}
+                    className={`result-value text-white ${winnerTextSizeClass} ${winnerTextLineHeightClass} font-extrabold text-center px-7`}
                     title={winnerLabelText !== winnerFullText ? winnerFullText : undefined}
                   >
                     {winnerLabelText}
@@ -521,6 +528,7 @@
               </div>
 
               <button
+                ref={spinButtonRef}
                 onClick={spin}
                 disabled={!canSpin}
                 className="spin-btn mt-4 w-full py-4 rounded-2xl font-bold text-lg text-white"
