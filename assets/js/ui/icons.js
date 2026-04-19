@@ -97,6 +97,18 @@
     />
   );
 
+  const HistoryIcon = () => (
+    <Icon
+      d={
+        <>
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.5 15a9 9 0 1 0 2.2-9.36L1 10" />
+          <polyline points="12 7 12 12 15.5 14" />
+        </>
+      }
+    />
+  );
+
   window.WheelRandomizer = window.WheelRandomizer || {};
   window.WheelRandomizer.icons = {
     EditIcon,
@@ -107,5 +119,6 @@
     LayersIcon,
     FolderIcon,
     CloseIcon,
+    HistoryIcon,
   };
 })();

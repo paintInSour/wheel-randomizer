@@ -58,6 +58,12 @@
         d: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" }), /* @__PURE__ */ React.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" }))
       }
     );
+    const HistoryIcon = () => /* @__PURE__ */ React.createElement(
+      Icon,
+      {
+        d: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("polyline", { points: "1 4 1 10 7 10" }), /* @__PURE__ */ React.createElement("path", { d: "M3.5 15a9 9 0 1 0 2.2-9.36L1 10" }), /* @__PURE__ */ React.createElement("polyline", { points: "12 7 12 12 15.5 14" }))
+      }
+    );
     window.WheelRandomizer = window.WheelRandomizer || {};
     window.WheelRandomizer.icons = {
       EditIcon,
@@ -67,7 +73,8 @@
       SaveIcon,
       LayersIcon,
       FolderIcon,
-      CloseIcon
+      CloseIcon,
+      HistoryIcon
     };
   })();
 })();

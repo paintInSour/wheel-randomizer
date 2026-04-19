@@ -5,7 +5,8 @@
   const { RAINBOW, initRotation } = ns.constants;
   const { loadOptions, saveOptions, loadSavedWheels, persistSavedWheels } = ns.storage;
   const { Wheel } = ns.components;
-  const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon, CloseIcon } = ns.icons;
+  const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon, CloseIcon, HistoryIcon } = ns.icons;
+  const HISTORY_PAGE_SIZE = 5;
 
   function App() {
     const [options, setOptions] = useState(loadOptions);
@@ -23,6 +24,8 @@
     const [newWheelName, setNewWheelName] = useState('');
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [saveModalName, setSaveModalName] = useState('');
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyPage, setHistoryPage] = useState(1);
 
     const rotRef = useRef(initRotation(loadOptions().length));
     const animRef = useRef(null);
@@ -46,6 +49,22 @@
       document.addEventListener('mousedown', onMouseDown);
       return () => document.removeEventListener('mousedown', onMouseDown);
     }, [showWheelsPanel]);
+
+    useEffect(() => {
+      if (!showSaveModal && !showHistoryModal) {
+        return;
+      }
+
+      const onKeyDown = event => {
+        if (event.key === 'Escape') {
+          setShowSaveModal(false);
+          setShowHistoryModal(false);
+        }
+      };
+
+      document.addEventListener('keydown', onKeyDown);
+      return () => document.removeEventListener('keydown', onKeyDown);
+    }, [showSaveModal, showHistoryModal]);
 
     const spin = useCallback(() => {
       if (spinning || options.length < 2) {
@@ -83,13 +102,30 @@
         if (t < 1) {
           animRef.current = requestAnimationFrame(frame);
         } else {
+          const winner = options[targetIdx];
           setSpinning(false);
-          setResult(options[targetIdx]);
+          setResult(winner);
+
+          if (activeWheelId) {
+            const historyEntry = {
+              id: `history-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+              winner,
+              createdAt: Date.now(),
+            };
+
+            setSavedWheels(prev =>
+              prev.map(wheel =>
+                wheel.id === activeWheelId
+                  ? { ...wheel, history: [historyEntry, ...(Array.isArray(wheel.history) ? wheel.history : [])] }
+                  : wheel,
+              ),
+            );
+          }
         }
       };
 
       animRef.current = requestAnimationFrame(frame);
-    }, [spinning, options]);
+    }, [spinning, options, activeWheelId]);
 
     useEffect(() => {
       saveOptions(options);
@@ -161,7 +197,7 @@
         return;
       }
 
-      const newWheel = { id: String(Date.now()), name, options: [...options] };
+      const newWheel = { id: String(Date.now()), name, options: [...options], history: [] };
       setSavedWheels(prev => [...prev, newWheel]);
       setActiveWheelId(newWheel.id);
       setNewWheelName('');
@@ -174,7 +210,7 @@
         return;
       }
 
-      const newWheel = { id: String(Date.now()), name, options: [...options] };
+      const newWheel = { id: String(Date.now()), name, options: [...options], history: [] };
       setSavedWheels(prev => [...prev, newWheel]);
       setActiveWheelId(newWheel.id);
       setShowSaveModal(false);
@@ -185,6 +221,15 @@
       setSaveModalName('');
       setShowSaveModal(true);
       setTimeout(() => saveModalNameRef.current?.focus(), 30);
+    };
+
+    const openHistoryModal = () => {
+      if (!activeWheelId) {
+        return;
+      }
+
+      setHistoryPage(1);
+      setShowHistoryModal(true);
     };
 
     const loadSavedWheel = wheel => {
@@ -198,13 +243,33 @@
       setSavedWheels(prev => prev.filter(wheel => wheel.id !== id));
       if (activeWheelId === id) {
         setActiveWheelId(null);
+        setShowHistoryModal(false);
+        setHistoryPage(1);
       }
     };
 
+    const formatHistoryDate = timestamp => {
+      const date = new Date(timestamp);
+      if (Number.isNaN(date.getTime())) {
+        return 'Unknown date';
+      }
+
+      return date.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+    };
+
     const canSpin = !spinning && options.length >= 2;
-    const activeWheelName = activeWheelId
-      ? (savedWheels.find(wheel => wheel.id === activeWheelId)?.name ?? null)
-      : null;
+    const activeWheel = activeWheelId ? (savedWheels.find(wheel => wheel.id === activeWheelId) ?? null) : null;
+    const activeWheelName = activeWheel?.name ?? null;
+    const activeWheelHistory = Array.isArray(activeWheel?.history) ? activeWheel.history : [];
+    const totalHistoryPages = Math.max(1, Math.ceil(activeWheelHistory.length / HISTORY_PAGE_SIZE));
+    const visibleHistoryPage = Math.min(historyPage, totalHistoryPages);
+    const paginatedHistory = activeWheelHistory.slice(
+      (visibleHistoryPage - 1) * HISTORY_PAGE_SIZE,
+      visibleHistoryPage * HISTORY_PAGE_SIZE,
+    );
 
     return (
       <>
@@ -300,6 +365,18 @@
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div className="absolute top-4 right-4 z-20">
+                <button
+                  className={`wheel-corner-btn ${showHistoryModal ? 'open' : ''}`}
+                  onClick={openHistoryModal}
+                  disabled={spinning || !activeWheelId}
+                  title={activeWheelId ? 'Wheel history' : 'Save or load a wheel to track history'}
+                >
+                  <HistoryIcon />
+                  {activeWheelHistory.length > 0 && <span>{activeWheelHistory.length}</span>}
+                </button>
               </div>
 
               <div className="relative">
@@ -561,6 +638,75 @@
                   Save wheel
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {showHistoryModal && (
+          <div
+            className="modal-backdrop"
+            onMouseDown={event => {
+              if (event.target === event.currentTarget) {
+                setShowHistoryModal(false);
+              }
+            }}
+          >
+            <div className="modal-card history-modal-card">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-extrabold text-gray-800 mb-1">Spin history</h2>
+                  <p className="text-sm text-gray-400">
+                    {activeWheelName ? `${activeWheelName}` : 'Saved wheel'} · {activeWheelHistory.length} result
+                    {activeWheelHistory.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowHistoryModal(false)}
+                  className="modal-close-btn p-1.5"
+                  title="Close history"
+                  aria-label="Close history"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+
+              {activeWheelHistory.length === 0 ? (
+                <div className="text-center py-10 text-gray-400">
+                  <div className="text-3xl mb-2">🕰️</div>
+                  <p className="text-sm">No spin history yet for this wheel.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="history-list">
+                    {paginatedHistory.map(entry => (
+                      <div key={entry.id} className="history-row">
+                        <p className="text-sm font-bold text-gray-700 break-words">{entry.winner}</p>
+                        <p className="history-date text-xs font-semibold mt-1.5">{formatHistoryDate(entry.createdAt)}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="history-pagination">
+                    <button
+                      className="history-page-btn"
+                      onClick={() => setHistoryPage(page => Math.max(1, page - 1))}
+                      disabled={visibleHistoryPage <= 1}
+                    >
+                      Prev
+                    </button>
+                    <p className="history-page-indicator">
+                      Page {visibleHistoryPage} / {totalHistoryPages}
+                    </p>
+                    <button
+                      className="history-page-btn"
+                      onClick={() => setHistoryPage(page => Math.min(totalHistoryPages, page + 1))}
+                      disabled={visibleHistoryPage >= totalHistoryPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

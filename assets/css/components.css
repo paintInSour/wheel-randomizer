@@ -202,3 +202,71 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.modal-close-btn {
+  color: #9ca3af;
+  border-radius: 9999px;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.modal-close-btn:hover {
+  color: #6d28d9;
+  background: #f5f3ff;
+  transform: scale(1.06);
+}
+
+.history-modal-card {
+  max-width: 420px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.history-row {
+  border: 1px solid #ede9fe;
+  background: linear-gradient(135deg, #faf5ff, #f8faff);
+  border-radius: 16px;
+  padding: 11px 13px;
+}
+
+.history-date {
+  color: #8b5cf6;
+}
+
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.history-page-btn {
+  min-width: 82px;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: #f5f3ff;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.history-page-btn:hover:not(:disabled) {
+  background: #ede9fe;
+}
+
+.history-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.history-page-indicator {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a78bfa;
+}
