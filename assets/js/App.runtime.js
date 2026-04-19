@@ -35,7 +35,7 @@
       const [confirmClear, setConfirmClear] = useState(false);
       const [savedWheels, setSavedWheels] = useState(() => initialState.savedWheels);
       const [activeWheelId, setActiveWheelId] = useState(() => initialState.activeWheelId);
-      const [showWheelsPanel, setShowWheelsPanel] = useState(false);
+      const [showWheelsModal, setShowWheelsModal] = useState(false);
       const [newWheelName, setNewWheelName] = useState("");
       const [showSaveModal, setShowSaveModal] = useState(false);
       const [saveModalName, setSaveModalName] = useState("");
@@ -49,37 +49,25 @@
       const editInputRef = useRef(null);
       const addInputRef = useRef(null);
       const newWheelNameRef = useRef(null);
-      const wheelsPanelRef = useRef(null);
       const saveModalNameRef = useRef(null);
       const resultPopRef = useRef(null);
       const winnerBadgeRef = useRef(null);
       const winnerTextRef = useRef(null);
       const removeWinnerBtnRef = useRef(null);
       useEffect(() => {
-        if (!showWheelsPanel) {
-          return;
-        }
-        const onMouseDown = (event) => {
-          if (wheelsPanelRef.current && !wheelsPanelRef.current.contains(event.target)) {
-            setShowWheelsPanel(false);
-          }
-        };
-        document.addEventListener("mousedown", onMouseDown);
-        return () => document.removeEventListener("mousedown", onMouseDown);
-      }, [showWheelsPanel]);
-      useEffect(() => {
-        if (!showSaveModal && !showHistoryModal) {
+        if (!showSaveModal && !showHistoryModal && !showWheelsModal) {
           return;
         }
         const onKeyDown = (event) => {
           if (event.key === "Escape") {
             setShowSaveModal(false);
             setShowHistoryModal(false);
+            setShowWheelsModal(false);
           }
         };
         document.addEventListener("keydown", onKeyDown);
         return () => document.removeEventListener("keydown", onKeyDown);
-      }, [showSaveModal, showHistoryModal]);
+      }, [showSaveModal, showHistoryModal, showWheelsModal]);
       useEffect(() => {
         const onResize = () => setWinnerFitVersion((version) => version + 1);
         window.addEventListener("resize", onResize);
@@ -214,9 +202,8 @@
         const nextRotation = initRotation(0);
         rotRef.current = nextRotation;
         setRotation(nextRotation);
-        setShowWheelsPanel(false);
+        setShowWheelsModal(false);
         setNewWheelName("");
-        setTimeout(() => newWheelNameRef.current?.focus(), 10);
       };
       const saveAsWheel = () => {
         const name = saveModalName.trim();
@@ -241,11 +228,15 @@
         setHistoryPage(1);
         setShowHistoryModal(true);
       };
+      const openWheelsModal = () => {
+        setShowWheelsModal(true);
+        setTimeout(() => newWheelNameRef.current?.focus(), 30);
+      };
       const loadSavedWheel = (wheel) => {
         setOptions(wheel.options);
         setActiveWheelId(wheel.id);
         setResult(null);
-        setShowWheelsPanel(false);
+        setShowWheelsModal(false);
       };
       const deleteSavedWheel = (id) => {
         setSavedWheels((prev) => prev.filter((wheel) => wheel.id !== id));
@@ -363,68 +354,16 @@
           }
         },
         "Wheel Randomizer"
-      ), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-violet-400 mt-1 font-medium" }, "Spin and let fate decide \u2728")), /* @__PURE__ */ React.createElement("div", { className: "card rounded-3xl shadow-2xl p-5 pb-6 relative", style: { boxShadow: "0 20px 60px rgba(124,58,237,0.13)" } }, /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-4 z-20", ref: wheelsPanelRef }, /* @__PURE__ */ React.createElement(
+      ), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-violet-400 mt-1 font-medium" }, "Spin and let fate decide \u2728")), /* @__PURE__ */ React.createElement("div", { className: "card rounded-3xl shadow-2xl p-5 pb-6 relative", style: { boxShadow: "0 20px 60px rgba(124,58,237,0.13)" } }, /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-4 z-20" }, /* @__PURE__ */ React.createElement(
         "button",
         {
-          className: `wheel-corner-btn ${showWheelsPanel ? "open" : ""}`,
-          onClick: () => setShowWheelsPanel((prev) => !prev),
+          className: `wheel-corner-btn ${showWheelsModal ? "open" : ""}`,
+          onClick: openWheelsModal,
           disabled: spinning,
           title: "My saved wheels"
         },
         /* @__PURE__ */ React.createElement(LayersIcon, null),
         savedWheels.length > 0 && /* @__PURE__ */ React.createElement("span", null, savedWheels.length)
-      ), showWheelsPanel && /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          className: "float-panel mt-1",
-          style: { width: "calc(100vw - 64px)", maxWidth: "416px", left: 0, right: "auto" }
-        },
-        /* @__PURE__ */ React.createElement("div", { className: "px-4 pt-4 pb-2" }, /* @__PURE__ */ React.createElement("p", { className: "text-xs font-bold uppercase tracking-widest text-violet-400" }, "My Wheels")),
-        savedWheels.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-400 text-center px-4 pb-3" }, "No saved wheels yet. Create one below!") : /* @__PURE__ */ React.createElement("div", { className: "scroll-area flex flex-col gap-1 max-h-52 overflow-y-auto px-2" }, [...savedWheels].reverse().map((wheel) => /* @__PURE__ */ React.createElement(
-          "div",
-          {
-            key: wheel.id,
-            className: `wheel-row flex items-center gap-3 px-3 py-2.5 ${wheel.id === activeWheelId ? "is-active" : ""}`
-          },
-          /* @__PURE__ */ React.createElement("div", { className: "flex-1 min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm font-semibold text-gray-700 truncate" }, wheel.name), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-400 mt-0.5" }, wheel.options.length, " option", wheel.options.length !== 1 ? "s" : "")),
-          /* @__PURE__ */ React.createElement(
-            "button",
-            {
-              onClick: () => wheel.id !== activeWheelId && loadSavedWheel(wheel),
-              className: `load-btn ${wheel.id === activeWheelId ? "current" : ""}`
-            },
-            wheel.id === activeWheelId ? "Active" : "Load"
-          ),
-          /* @__PURE__ */ React.createElement(
-            "button",
-            {
-              onClick: () => deleteSavedWheel(wheel.id),
-              className: "icon-btn text-gray-300 hover:text-rose-400 flex-shrink-0 p-1",
-              title: "Delete saved wheel"
-            },
-            /* @__PURE__ */ React.createElement(TrashIcon, null)
-          )
-        ))),
-        /* @__PURE__ */ React.createElement("div", { className: "flex gap-2 px-3 py-3 border-t border-gray-100 mt-1" }, /* @__PURE__ */ React.createElement(
-          "input",
-          {
-            ref: newWheelNameRef,
-            className: "flex-1 bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-300 transition-all",
-            placeholder: "New wheel name\u2026",
-            value: newWheelName,
-            onChange: (event) => setNewWheelName(event.target.value),
-            onKeyDown: (event) => event.key === "Enter" && createWheel()
-          }
-        ), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            onClick: createWheel,
-            disabled: !newWheelName.trim(),
-            className: "add-btn w-9 h-9 flex items-center justify-center rounded-xl text-white flex-shrink-0 disabled:opacity-40",
-            title: "Create wheel"
-          },
-          /* @__PURE__ */ React.createElement(PlusIcon, null)
-        ))
       )), /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 right-4 z-20" }, /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -627,6 +566,69 @@
             className: "spin-btn flex-1 py-3 rounded-2xl text-sm font-bold text-white disabled:opacity-40"
           },
           "Save wheel"
+        )))
+      ), showWheelsModal && /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          className: "modal-backdrop",
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) {
+              setShowWheelsModal(false);
+            }
+          }
+        },
+        /* @__PURE__ */ React.createElement("div", { className: "modal-card wheels-modal-card" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-start justify-between gap-3 px-6 pb-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "text-xl font-extrabold text-gray-800 mb-1" }, "My wheels"), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-400" }, savedWheels.length, " wheel", savedWheels.length !== 1 ? "s" : "", " saved")), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            onClick: () => setShowWheelsModal(false),
+            className: "modal-close-btn p-1.5",
+            title: "Close wheels",
+            "aria-label": "Close wheels"
+          },
+          /* @__PURE__ */ React.createElement(CloseIcon, null)
+        )), savedWheels.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-400 text-center px-6 pb-4" }, "No saved wheels yet. Create one below!") : /* @__PURE__ */ React.createElement("div", { className: "scroll-area flex flex-col gap-1 max-h-56 overflow-y-auto px-4 pb-3" }, [...savedWheels].reverse().map((wheel) => /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            key: wheel.id,
+            className: `wheel-row flex items-center gap-3 px-3 py-2.5 ${wheel.id === activeWheelId ? "is-active" : ""}`
+          },
+          /* @__PURE__ */ React.createElement("div", { className: "flex-1 min-w-0" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm font-semibold text-gray-700 truncate" }, wheel.name), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-400 mt-0.5" }, wheel.options.length, " option", wheel.options.length !== 1 ? "s" : "")),
+          /* @__PURE__ */ React.createElement(
+            "button",
+            {
+              onClick: () => wheel.id !== activeWheelId && loadSavedWheel(wheel),
+              className: `load-btn ${wheel.id === activeWheelId ? "current" : ""}`
+            },
+            wheel.id === activeWheelId ? "Active" : "Load"
+          ),
+          /* @__PURE__ */ React.createElement(
+            "button",
+            {
+              onClick: () => deleteSavedWheel(wheel.id),
+              className: "icon-btn text-gray-300 hover:text-rose-400 flex-shrink-0 p-1",
+              title: "Delete saved wheel"
+            },
+            /* @__PURE__ */ React.createElement(TrashIcon, null)
+          )
+        ))), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2 px-4 py-4 border-t border-gray-100 mt-1" }, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            ref: newWheelNameRef,
+            className: "flex-1 bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-300 transition-all",
+            placeholder: "New wheel name\u2026",
+            value: newWheelName,
+            onChange: (event) => setNewWheelName(event.target.value),
+            onKeyDown: (event) => event.key === "Enter" && createWheel()
+          }
+        ), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            onClick: createWheel,
+            disabled: !newWheelName.trim(),
+            className: "add-btn w-9 h-9 flex items-center justify-center rounded-xl text-white flex-shrink-0 disabled:opacity-40",
+            title: "Create wheel"
+          },
+          /* @__PURE__ */ React.createElement(PlusIcon, null)
         )))
       ), showHistoryModal && /* @__PURE__ */ React.createElement(
         "div",
