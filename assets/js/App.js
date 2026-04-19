@@ -253,9 +253,15 @@
         return;
       }
 
-      const newWheel = { id: String(Date.now()), name, options: [...options], history: [] };
+      const newWheel = { id: String(Date.now()), name, options: [], history: [] };
       setSavedWheels(prev => [...prev, newWheel]);
       setActiveWheelId(newWheel.id);
+      setOptions([]);
+      setResult(null);
+      const nextRotation = initRotation(0);
+      rotRef.current = nextRotation;
+      setRotation(nextRotation);
+      setShowWheelsPanel(false);
       setNewWheelName('');
       setTimeout(() => newWheelNameRef.current?.focus(), 10);
     };
@@ -480,7 +486,7 @@
                       </p>
                     ) : (
                       <div className="scroll-area flex flex-col gap-1 max-h-52 overflow-y-auto px-2">
-                        {savedWheels.map(wheel => (
+                        {[...savedWheels].reverse().map(wheel => (
                           <div
                             key={wheel.id}
                             className={`wheel-row flex items-center gap-3 px-3 py-2.5 ${wheel.id === activeWheelId ? 'is-active' : ''}`}

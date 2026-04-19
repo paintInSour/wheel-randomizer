@@ -206,9 +206,15 @@
         if (!name) {
           return;
         }
-        const newWheel = { id: String(Date.now()), name, options: [...options], history: [] };
+        const newWheel = { id: String(Date.now()), name, options: [], history: [] };
         setSavedWheels((prev) => [...prev, newWheel]);
         setActiveWheelId(newWheel.id);
+        setOptions([]);
+        setResult(null);
+        const nextRotation = initRotation(0);
+        rotRef.current = nextRotation;
+        setRotation(nextRotation);
+        setShowWheelsPanel(false);
         setNewWheelName("");
         setTimeout(() => newWheelNameRef.current?.focus(), 10);
       };
@@ -374,7 +380,7 @@
           style: { width: "calc(100vw - 64px)", maxWidth: "416px", left: 0, right: "auto" }
         },
         /* @__PURE__ */ React.createElement("div", { className: "px-4 pt-4 pb-2" }, /* @__PURE__ */ React.createElement("p", { className: "text-xs font-bold uppercase tracking-widest text-violet-400" }, "My Wheels")),
-        savedWheels.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-400 text-center px-4 pb-3" }, "No saved wheels yet. Create one below!") : /* @__PURE__ */ React.createElement("div", { className: "scroll-area flex flex-col gap-1 max-h-52 overflow-y-auto px-2" }, savedWheels.map((wheel) => /* @__PURE__ */ React.createElement(
+        savedWheels.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-400 text-center px-4 pb-3" }, "No saved wheels yet. Create one below!") : /* @__PURE__ */ React.createElement("div", { className: "scroll-area flex flex-col gap-1 max-h-52 overflow-y-auto px-2" }, [...savedWheels].reverse().map((wheel) => /* @__PURE__ */ React.createElement(
           "div",
           {
             key: wheel.id,
