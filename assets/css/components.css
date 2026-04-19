@@ -2,6 +2,18 @@
   animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
+.result-pop-card-top {
+  top: 12%;
+  max-height: calc(88% - 84px);
+  overflow: hidden;
+}
+
+.result-value {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .result-close-btn {
   color: rgba(255, 255, 255, 0.8);
   border-radius: 9999px;

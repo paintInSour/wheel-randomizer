@@ -1,5 +1,5 @@
 (function initApp() {
-  const { useState, useRef, useEffect, useCallback } = React;
+  const { useState, useRef, useEffect, useLayoutEffect, useCallback } = React;
   const ns = window.WheelRandomizer;
 
   const { RAINBOW, initRotation } = ns.constants;
@@ -7,6 +7,8 @@
   const { Wheel } = ns.components;
   const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon, CloseIcon, HistoryIcon } = ns.icons;
   const HISTORY_PAGE_SIZE = 5;
+  const WINNER_TEXT_SIZE_CLASSES = ['text-2xl', 'text-xl', 'text-lg', 'text-base'];
+  const WINNER_MIN_PREVIEW_LENGTH = 18;
 
   function App() {
     const [options, setOptions] = useState(loadOptions);
@@ -26,6 +28,9 @@
     const [saveModalName, setSaveModalName] = useState('');
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [historyPage, setHistoryPage] = useState(1);
+    const [winnerTextSizeIndex, setWinnerTextSizeIndex] = useState(0);
+    const [winnerPreviewText, setWinnerPreviewText] = useState('');
+    const [winnerFitVersion, setWinnerFitVersion] = useState(0);
 
     const rotRef = useRef(initRotation(loadOptions().length));
     const animRef = useRef(null);
@@ -34,6 +39,10 @@
     const newWheelNameRef = useRef(null);
     const wheelsPanelRef = useRef(null);
     const saveModalNameRef = useRef(null);
+    const resultPopRef = useRef(null);
+    const winnerBadgeRef = useRef(null);
+    const winnerTextRef = useRef(null);
+    const removeWinnerBtnRef = useRef(null);
 
     useEffect(() => {
       if (!showWheelsPanel) {
@@ -65,6 +74,12 @@
       document.addEventListener('keydown', onKeyDown);
       return () => document.removeEventListener('keydown', onKeyDown);
     }, [showSaveModal, showHistoryModal]);
+
+    useEffect(() => {
+      const onResize = () => setWinnerFitVersion(version => version + 1);
+      window.addEventListener('resize', onResize);
+      return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     const spin = useCallback(() => {
       if (spinning || options.length < 2) {
@@ -260,7 +275,115 @@
       });
     };
 
+    const normalizeWinnerText = winner => winner.trim().replace(/\s+/g, ' ');
+
+    const truncateByWordBoundary = (text, maxLength) => {
+      if (text.length <= maxLength) {
+        return text;
+      }
+
+      const textSlice = text.slice(0, maxLength + 1);
+      const lastSpaceIndex = textSlice.lastIndexOf(' ');
+
+      if (lastSpaceIndex > Math.floor(maxLength * 0.55)) {
+        return textSlice.slice(0, lastSpaceIndex).trimEnd();
+      }
+
+      return text.slice(0, maxLength).trimEnd();
+    };
+
+    const getNextWinnerPreview = (winner, currentText) => {
+      const normalizedWinner = normalizeWinnerText(winner);
+      const currentBaseText = currentText.endsWith('...') ? currentText.slice(0, -3).trimEnd() : currentText.trim();
+
+      if (currentBaseText.length <= WINNER_MIN_PREVIEW_LENGTH) {
+        return currentText;
+      }
+
+      const trimStep = Math.max(4, Math.ceil(currentBaseText.length * 0.12));
+      const nextMaxLength = Math.max(WINNER_MIN_PREVIEW_LENGTH, currentBaseText.length - trimStep);
+      let nextText = truncateByWordBoundary(normalizedWinner, nextMaxLength);
+
+      if (!nextText || nextText.length >= currentBaseText.length) {
+        nextText = normalizedWinner.slice(0, nextMaxLength).trimEnd();
+      }
+
+      if (!nextText || nextText.length >= normalizedWinner.length) {
+        return normalizedWinner;
+      }
+
+      return `${nextText}...`;
+    };
+
+    useEffect(() => {
+      if (!result || spinning) {
+        setWinnerTextSizeIndex(0);
+        setWinnerPreviewText('');
+        return;
+      }
+
+      setWinnerTextSizeIndex(0);
+      setWinnerPreviewText(normalizeWinnerText(result));
+    }, [result, spinning, winnerFitVersion]);
+
+    useLayoutEffect(() => {
+      if (!result || spinning || !winnerPreviewText) {
+        return;
+      }
+
+      const popupElement = resultPopRef.current;
+      const badgeElement = winnerBadgeRef.current;
+      const textElement = winnerTextRef.current;
+      const removeButtonElement = removeWinnerBtnRef.current;
+
+      if (!popupElement || !badgeElement || !textElement || !removeButtonElement) {
+        return;
+      }
+
+      const popupStyles = window.getComputedStyle(popupElement);
+      const popupPaddingTop = parseFloat(popupStyles.paddingTop) || 0;
+      const popupPaddingBottom = parseFloat(popupStyles.paddingBottom) || 0;
+      const textMarginTop = parseFloat(window.getComputedStyle(textElement).marginTop) || 0;
+      const textMarginBottom = parseFloat(window.getComputedStyle(textElement).marginBottom) || 0;
+      const buttonMarginTop = parseFloat(window.getComputedStyle(removeButtonElement).marginTop) || 0;
+      const badgeMarginBottom = parseFloat(window.getComputedStyle(badgeElement).marginBottom) || 0;
+
+      const reservedHeight =
+        popupPaddingTop +
+        popupPaddingBottom +
+        badgeElement.offsetHeight +
+        badgeMarginBottom +
+        textMarginTop +
+        textMarginBottom +
+        buttonMarginTop +
+        removeButtonElement.offsetHeight;
+      const availableTextHeight = popupElement.clientHeight - reservedHeight;
+
+      if (availableTextHeight <= 0) {
+        return;
+      }
+
+      const textOverflows = textElement.scrollHeight > availableTextHeight + 1;
+      if (!textOverflows) {
+        return;
+      }
+
+      if (winnerTextSizeIndex < WINNER_TEXT_SIZE_CLASSES.length - 1) {
+        setWinnerTextSizeIndex(index => index + 1);
+        return;
+      }
+
+      const nextWinnerPreview = getNextWinnerPreview(result, winnerPreviewText);
+      if (nextWinnerPreview !== winnerPreviewText) {
+        setWinnerPreviewText(nextWinnerPreview);
+      }
+    }, [result, spinning, winnerTextSizeIndex, winnerPreviewText]);
+
     const canSpin = !spinning && options.length >= 2;
+    const winnerTextSizeClass =
+      WINNER_TEXT_SIZE_CLASSES[winnerTextSizeIndex] ?? WINNER_TEXT_SIZE_CLASSES[WINNER_TEXT_SIZE_CLASSES.length - 1];
+    const winnerFullText = result ? normalizeWinnerText(result) : '';
+    const winnerLabelText = winnerPreviewText || winnerFullText;
     const activeWheel = activeWheelId ? (savedWheels.find(wheel => wheel.id === activeWheelId) ?? null) : null;
     const activeWheelName = activeWheel?.name ?? null;
     const activeWheelHistory = Array.isArray(activeWheel?.history) ? activeWheel.history : [];
@@ -379,44 +502,51 @@
                 </button>
               </div>
 
+              {result && !spinning && (
+                <div
+                  ref={resultPopRef}
+                  className="result-pop result-pop-card-top absolute left-4 right-4 z-30 flex flex-col items-center justify-start rounded-3xl py-5"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(109,40,217,0.82), rgba(167,139,250,0.82))',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                >
+                  <button
+                    onClick={() => setResult(null)}
+                    className="result-close-btn absolute top-3 right-3 p-1.5"
+                    title="Close result"
+                    aria-label="Close result"
+                  >
+                    <CloseIcon />
+                  </button>
+                  <p ref={winnerBadgeRef} className="text-xs font-bold uppercase tracking-[0.2em] text-purple-200 mb-2">
+                    🎉 Winner!
+                  </p>
+                  <p
+                    ref={winnerTextRef}
+                    className={`result-value text-white ${winnerTextSizeClass} font-extrabold leading-snug text-center px-7`}
+                    title={winnerLabelText !== winnerFullText ? winnerFullText : undefined}
+                  >
+                    {winnerLabelText}
+                  </p>
+                  <button
+                    ref={removeWinnerBtnRef}
+                    onClick={() => {
+                      setOptions(prev => prev.filter(option => option !== result));
+                      setResult(null);
+                    }}
+                    className="remove-winner-btn mt-5 px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all duration-150"
+                  >
+                    <TrashIcon />
+                    Remove from wheel
+                  </button>
+                </div>
+              )}
+
               <div className="relative">
                 <div className="max-w-xs mx-auto">
                   <Wheel options={options} rotation={rotation} />
                 </div>
-
-                {result && !spinning && (
-                  <div
-                    className="result-pop absolute left-0 right-0 -translate-y-1/2 z-30 flex flex-col items-center justify-center rounded-3xl py-6"
-                    style={{
-                      top: '46%',
-                      background: 'linear-gradient(135deg, rgba(109,40,217,0.82), rgba(167,139,250,0.82))',
-                      backdropFilter: 'blur(10px)',
-                    }}
-                  >
-                    <button
-                      onClick={() => setResult(null)}
-                      className="result-close-btn absolute top-3 right-3 p-1.5"
-                      title="Close result"
-                      aria-label="Close result"
-                    >
-                      <CloseIcon />
-                    </button>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-200 mb-2">🎉 Winner!</p>
-                    <p className="text-white text-2xl font-extrabold leading-snug text-center px-8 break-words">
-                      {result}
-                    </p>
-                    <button
-                      onClick={() => {
-                        setOptions(prev => prev.filter(option => option !== result));
-                        setResult(null);
-                      }}
-                      className="remove-winner-btn mt-5 px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all duration-150"
-                    >
-                      <TrashIcon />
-                      Remove from wheel
-                    </button>
-                  </div>
-                )}
               </div>
 
               <button
