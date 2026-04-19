@@ -52,6 +52,12 @@
         d: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }))
       }
     );
+    const CloseIcon = () => /* @__PURE__ */ React.createElement(
+      Icon,
+      {
+        d: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" }), /* @__PURE__ */ React.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" }))
+      }
+    );
     window.WheelRandomizer = window.WheelRandomizer || {};
     window.WheelRandomizer.icons = {
       EditIcon,
@@ -60,7 +66,8 @@
       PlusIcon,
       SaveIcon,
       LayersIcon,
-      FolderIcon
+      FolderIcon,
+      CloseIcon
     };
   })();
 })();

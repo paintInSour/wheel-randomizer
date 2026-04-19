@@ -5,7 +5,7 @@
     const { RAINBOW, initRotation } = ns.constants;
     const { loadOptions, saveOptions, loadSavedWheels, persistSavedWheels } = ns.storage;
     const { Wheel } = ns.components;
-    const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon } = ns.icons;
+    const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon, CloseIcon } = ns.icons;
     function App() {
       const [options, setOptions] = useState(loadOptions);
       const [rotation, setRotation] = useState(() => initRotation(loadOptions().length));
@@ -242,15 +242,26 @@
           },
           /* @__PURE__ */ React.createElement(PlusIcon, null)
         ))
-      )), /* @__PURE__ */ React.createElement("div", { className: "max-w-xs mx-auto relative" }, /* @__PURE__ */ React.createElement(Wheel, { options, rotation }), result && !spinning && /* @__PURE__ */ React.createElement(
+      )), /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement("div", { className: "max-w-xs mx-auto" }, /* @__PURE__ */ React.createElement(Wheel, { options, rotation })), result && !spinning && /* @__PURE__ */ React.createElement(
         "div",
         {
-          className: "result-pop absolute left-4 right-4 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center rounded-3xl py-6",
+          className: "result-pop absolute left-0 right-0 -translate-y-1/2 z-30 flex flex-col items-center justify-center rounded-3xl py-6",
           style: {
+            top: "46%",
             background: "linear-gradient(135deg, rgba(109,40,217,0.82), rgba(167,139,250,0.82))",
             backdropFilter: "blur(10px)"
           }
         },
+        /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            onClick: () => setResult(null),
+            className: "result-close-btn absolute top-3 right-3 p-1.5",
+            title: "Close result",
+            "aria-label": "Close result"
+          },
+          /* @__PURE__ */ React.createElement(CloseIcon, null)
+        ),
         /* @__PURE__ */ React.createElement("p", { className: "text-xs font-bold uppercase tracking-[0.2em] text-purple-200 mb-2" }, "\u{1F389} Winner!"),
         /* @__PURE__ */ React.createElement("p", { className: "text-white text-2xl font-extrabold leading-snug text-center px-8 break-words" }, result),
         /* @__PURE__ */ React.createElement(

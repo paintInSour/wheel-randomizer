@@ -5,7 +5,7 @@
   const { RAINBOW, initRotation } = ns.constants;
   const { loadOptions, saveOptions, loadSavedWheels, persistSavedWheels } = ns.storage;
   const { Wheel } = ns.components;
-  const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon } = ns.icons;
+  const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon, CloseIcon } = ns.icons;
 
   function App() {
     const [options, setOptions] = useState(loadOptions);
@@ -302,17 +302,28 @@
                 )}
               </div>
 
-              <div className="max-w-xs mx-auto relative">
-                <Wheel options={options} rotation={rotation} />
+              <div className="relative">
+                <div className="max-w-xs mx-auto">
+                  <Wheel options={options} rotation={rotation} />
+                </div>
 
                 {result && !spinning && (
                   <div
-                    className="result-pop absolute left-4 right-4 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center rounded-3xl py-6"
+                    className="result-pop absolute left-0 right-0 -translate-y-1/2 z-30 flex flex-col items-center justify-center rounded-3xl py-6"
                     style={{
+                      top: '46%',
                       background: 'linear-gradient(135deg, rgba(109,40,217,0.82), rgba(167,139,250,0.82))',
                       backdropFilter: 'blur(10px)',
                     }}
                   >
+                    <button
+                      onClick={() => setResult(null)}
+                      className="result-close-btn absolute top-3 right-3 p-1.5"
+                      title="Close result"
+                      aria-label="Close result"
+                    >
+                      <CloseIcon />
+                    </button>
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-200 mb-2">🎉 Winner!</p>
                     <p className="text-white text-2xl font-extrabold leading-snug text-center px-8 break-words">
                       {result}

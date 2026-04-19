@@ -2,6 +2,18 @@
   animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
+.result-close-btn {
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 9999px;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.result-close-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.08);
+}
+
 .spin-btn {
   background: linear-gradient(135deg, #7c3aed, #a78bfa);
   box-shadow: 0 8px 28px rgba(124, 58, 237, 0.38);
