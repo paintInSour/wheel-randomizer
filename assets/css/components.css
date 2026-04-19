@@ -33,12 +33,11 @@
 }
 
 .spin-btn:hover:not(:disabled) {
-  transform: translateY(-3px);
   box-shadow: 0 12px 32px rgba(124, 58, 237, 0.48);
 }
 
 .spin-btn:active:not(:disabled) {
-  transform: translateY(0);
+  box-shadow: 0 8px 28px rgba(124, 58, 237, 0.38);
 }
 
 .spin-btn:disabled {
