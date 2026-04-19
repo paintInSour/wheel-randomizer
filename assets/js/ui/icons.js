@@ -26,8 +26,9 @@
     />
   );
 
-  const TrashIcon = () => (
+  const TrashIcon = props => (
     <Icon
+      {...props}
       d={
         <>
           <polyline points="3 6 5 6 21 6" />

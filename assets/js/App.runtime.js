@@ -403,7 +403,7 @@
         "div",
         {
           ref: resultPopRef,
-          className: "result-pop result-pop-card-top absolute left-4 right-4 z-30 flex flex-col items-center justify-start rounded-3xl py-5",
+          className: "result-pop result-pop-card-top absolute left-4 right-4 z-30 flex flex-col items-center justify-start rounded-3xl pt-5 pb-2.5",
           style: {
             background: "linear-gradient(135deg, rgba(109,40,217,0.82), rgba(167,139,250,0.82))",
             backdropFilter: "blur(10px)"
@@ -437,9 +437,9 @@
               setOptions((prev) => prev.filter((option) => option !== result));
               setResult(null);
             },
-            className: "remove-winner-btn mt-5 px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all duration-150"
+            className: "remove-winner-btn mt-2 px-2.5 py-1 rounded-md text-[10px] font-semibold inline-flex items-center whitespace-nowrap leading-none gap-1 transition-all duration-150"
           },
-          /* @__PURE__ */ React.createElement(TrashIcon, null),
+          /* @__PURE__ */ React.createElement(TrashIcon, { size: 11 }),
           "Remove from wheel"
         )
       ), /* @__PURE__ */ React.createElement("div", { className: "relative" }, /* @__PURE__ */ React.createElement("div", { className: "max-w-xs mx-auto" }, /* @__PURE__ */ React.createElement(Wheel, { options, rotation }))), /* @__PURE__ */ React.createElement(
