@@ -3,16 +3,38 @@
   const ns = window.WheelRandomizer;
 
   const { RAINBOW, initRotation } = ns.constants;
-  const { loadOptions, saveOptions, loadSavedWheels, persistSavedWheels } = ns.storage;
+  const { loadOptions, saveOptions, loadSavedWheels, persistSavedWheels, loadActiveWheelId, persistActiveWheelId } =
+    ns.storage;
   const { Wheel } = ns.components;
   const { EditIcon, TrashIcon, CheckIcon, PlusIcon, SaveIcon, LayersIcon, FolderIcon, CloseIcon, HistoryIcon } = ns.icons;
   const HISTORY_PAGE_SIZE = 5;
   const WINNER_TEXT_SIZE_CLASSES = ['text-2xl', 'text-xl', 'text-lg', 'text-base'];
   const WINNER_MIN_PREVIEW_LENGTH = 18;
 
+  function getInitialState() {
+    const savedWheels = loadSavedWheels();
+    const persistedActiveWheelId = loadActiveWheelId();
+    const activeWheel = persistedActiveWheelId
+      ? savedWheels.find(wheel => wheel.id === persistedActiveWheelId) ?? null
+      : null;
+
+    return {
+      options: activeWheel ? [...activeWheel.options] : loadOptions(),
+      savedWheels,
+      activeWheelId: activeWheel ? activeWheel.id : null,
+    };
+  }
+
   function App() {
-    const [options, setOptions] = useState(loadOptions);
-    const [rotation, setRotation] = useState(() => initRotation(loadOptions().length));
+    const initialStateRef = useRef(null);
+    if (!initialStateRef.current) {
+      initialStateRef.current = getInitialState();
+    }
+
+    const initialState = initialStateRef.current;
+
+    const [options, setOptions] = useState(() => initialState.options);
+    const [rotation, setRotation] = useState(() => initRotation(initialState.options.length));
     const [spinning, setSpinning] = useState(false);
     const [result, setResult] = useState(null);
     const [editIndex, setEditIndex] = useState(null);
@@ -20,8 +42,8 @@
     const [newOpt, setNewOpt] = useState('');
     const [confirmClear, setConfirmClear] = useState(false);
 
-    const [savedWheels, setSavedWheels] = useState(loadSavedWheels);
-    const [activeWheelId, setActiveWheelId] = useState(null);
+    const [savedWheels, setSavedWheels] = useState(() => initialState.savedWheels);
+    const [activeWheelId, setActiveWheelId] = useState(() => initialState.activeWheelId);
     const [showWheelsPanel, setShowWheelsPanel] = useState(false);
     const [newWheelName, setNewWheelName] = useState('');
     const [showSaveModal, setShowSaveModal] = useState(false);
@@ -32,7 +54,7 @@
     const [winnerPreviewText, setWinnerPreviewText] = useState('');
     const [winnerFitVersion, setWinnerFitVersion] = useState(0);
 
-    const rotRef = useRef(initRotation(loadOptions().length));
+    const rotRef = useRef(initRotation(initialState.options.length));
     const animRef = useRef(null);
     const editInputRef = useRef(null);
     const addInputRef = useRef(null);
@@ -149,6 +171,25 @@
     useEffect(() => {
       persistSavedWheels(savedWheels);
     }, [savedWheels]);
+
+    useEffect(() => {
+      persistActiveWheelId(activeWheelId);
+    }, [activeWheelId]);
+
+    useEffect(() => {
+      if (!activeWheelId) {
+        return;
+      }
+
+      const hasActiveWheel = savedWheels.some(wheel => wheel.id === activeWheelId);
+      if (hasActiveWheel) {
+        return;
+      }
+
+      setActiveWheelId(null);
+      setShowHistoryModal(false);
+      setHistoryPage(1);
+    }, [savedWheels, activeWheelId]);
 
     useEffect(() => {
       if (!activeWheelId) {

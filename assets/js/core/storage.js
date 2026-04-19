@@ -1,6 +1,6 @@
 (function initStorage() {
   const ns = window.WheelRandomizer;
-  const { LS_KEY, SAVED_WHEELS_KEY, FALLBACK_OPTIONS } = ns.constants;
+  const { LS_KEY, SAVED_WHEELS_KEY, ACTIVE_WHEEL_ID_KEY, FALLBACK_OPTIONS } = ns.constants;
 
   function normalizeHistory(history) {
     if (!Array.isArray(history)) {
@@ -73,10 +73,33 @@
     } catch {}
   }
 
+  function loadActiveWheelId() {
+    try {
+      const activeWheelId = localStorage.getItem(ACTIVE_WHEEL_ID_KEY);
+      if (typeof activeWheelId === 'string' && activeWheelId.trim()) {
+        return activeWheelId;
+      }
+    } catch {}
+
+    return null;
+  }
+
+  function persistActiveWheelId(activeWheelId) {
+    try {
+      if (typeof activeWheelId === 'string' && activeWheelId) {
+        localStorage.setItem(ACTIVE_WHEEL_ID_KEY, activeWheelId);
+      } else {
+        localStorage.removeItem(ACTIVE_WHEEL_ID_KEY);
+      }
+    } catch {}
+  }
+
   ns.storage = {
     loadOptions,
     saveOptions,
     loadSavedWheels,
     persistSavedWheels,
+    loadActiveWheelId,
+    persistActiveWheelId,
   };
 })();

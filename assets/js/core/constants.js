@@ -19,6 +19,7 @@ window.WheelRandomizer.constants = {
   PADDING: 12,
   LS_KEY: 'wheel-randomizer-options',
   SAVED_WHEELS_KEY: 'wheel-randomizer-saved-wheels',
+  ACTIVE_WHEEL_ID_KEY: 'wheel-randomizer-active-wheel-id',
   FALLBACK_OPTIONS: ['Pizza 🍕', 'Sushi 🍣', 'Burger 🍔', 'Tacos 🌮', 'Pasta 🍝'],
   initRotation(n) {
     return -Math.PI / 2 - Math.PI / Math.max(n, 1);
